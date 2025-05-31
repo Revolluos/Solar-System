@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .toggle-container {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toggle-label {
+            font-size: 1rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 80px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(45deg, #00d4ff, #4ecdc4);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(40px);
+        }
+
+        .view-section {
+            transition: all 0.5s ease;
+        }
+
+        .view-section.hidden {
+            display: none;
+        }
+
+        .solar-system-animation {
+            position: relative;
+            width: 100%;
+            height: 80vh; /* Adjusted for better viewing */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .sun {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #ffeb3b, #ff9800, #ff5722);
+            border-radius: 50%;
+            box-shadow: 0 0 30px #ff9800, 0 0 60px #ff5722;
+            animation: sunGlow 3s ease-in-out infinite alternate;
+            z-index: 10;
+        }
+
+        @keyframes sunGlow {
+            0% { box-shadow: 0 0 30px #ff9800, 0 0 60px #ff5722; }
+            100% { box-shadow: 0 0 50px #ff9800, 0 0 100px #ff5722; }
+        }
+
+        .orbit {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: rotate linear infinite;
+        }
+
+        /* Adjusted orbit sizes for better fit on smaller screens if needed */
+        .orbit-mercury { width: 140px; height: 140px; animation-duration: 10s; }
+        .orbit-venus { width: 180px; height: 180px; animation-duration: 15s; }
+        .orbit-earth { width: 220px; height: 220px; animation-duration: 20s; }
+        .orbit-mars { width: 280px; height: 280px; animation-duration: 30s; }
+        .orbit-jupiter { width: 380px; height: 380px; animation-duration: 45s; }
+        .orbit-saturn { width: 460px; height: 460px; animation-duration: 60s; }
+        .orbit-uranus { width: 540px; height: 540px; animation-duration: 75s; }
+        .orbit-neptune { width: 620px; height: 620px; animation-duration: 90s; }
+
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animated-planet {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            /* Centering planets on their orbits */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        /* Positioning planets along the orbit path using an offset */
+        .orbit-mercury .animated-planet { transform: translate(calc(70px - 50%), -50%); }
+        .orbit-venus .animated-planet   { transform: translate(calc(90px - 50%), -50%); }
+        .orbit-earth .animated-planet   { transform: translate(calc(110px - 50%), -50%); }
+        .orbit-mars .animated-planet    { transform: translate(calc(140px - 50%), -50%); }
+        .orbit-jupiter .animated-planet { transform: translate(calc(190px - 50%), -50%); }
+        .orbit-saturn .animated-planet  { transform: translate(calc(230px - 50%), -50%); }
+        .orbit-uranus .animated-planet  { transform: translate(calc(270px - 50%), -50%); }
+        .orbit-neptune .animated-planet { transform: translate(calc(310px - 50%), -50%); }
+
+
+        .animated-planet:hover {
+            transform: scale(1.3) translate(calc(var(--orbit-radius, 0px) - 50%), -50%) ; /* Adjust hover to maintain position */
+            z-index: 100;
+        }
+
+        .planet-mercury { width: 12px; height: 12px; background: #8c7853; --orbit-radius: 70px; }
+        .planet-venus { width: 16px; height: 16px; background: #ffc649; --orbit-radius: 90px; }
+        .planet-earth { width: 18px; height: 18px; background: linear-gradient(45deg, #4a90e2, #7ed321); --orbit-radius: 110px; }
+        .planet-mars { width: 14px; height: 14px; background: #d0743c; --orbit-radius: 140px; }
+        .planet-jupiter { width: 35px; height: 35px; background: linear-gradient(45deg, #d8ca9d, #fab1a0); --orbit-radius: 190px; }
+        .planet-saturn { width: 30px; height: 30px; background: linear-gradient(45deg, #fad390, #f8c291); position: relative; --orbit-radius: 230px; }
+        .planet-uranus { width: 22px; height: 22px; background: #4dd0e1; --orbit-radius: 270px; }
+        .planet-neptune { width: 20px; height: 20px; background: #4169e1; --orbit-radius: 310px; }
+
+        .planet-saturn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(20deg); /* Slight rotation for rings */
+            width: 160%; /* Rings wider than planet */
+            height: 60%; /* Rings elliptical */
+            border: 2px solid rgba(248, 194, 145, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .animation-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            z-index: 20; /* Ensure controls are above orbits */
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .speed-slider {
+            width: 100px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none; /* Override default appearance */
+            appearance: none;
+        }
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .speed-slider::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            background: linear-gradient(45deg, #00d4ff, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            font-weight: 300;
+        }
+
+        .solar-system {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 60px 20px;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .planet {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 180px;
+        }
+
+        .planet:hover {
+            transform: translateY(-10px) scale(1.05);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .planet-image {
+            width: 120px;
+            height: 120px; /* Make it square for consistent circle */
+            object-fit: cover; /* Ensure image covers the area */
+            border-radius: 50%;
+            margin-bottom: 15px; /* Increased margin */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Softer shadow */
+            transition: all 0.3s ease;
+        }
+
+        .planet:hover .planet-image {
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        .planet-name {
+            font-size: 1.3rem;
+            font-weight: 500;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+            overflow-y: auto; /* Allow modal itself to scroll if content overflows */
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            margin: 5% auto; /* Adjusted margin for better centering */
+            padding: 0;
+            border: none;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            /* max-height: 90vh; Remove fixed max-height to allow content to define height */
+            /* overflow-y: auto; Moved to .modal */
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            position: relative;
+            animation: slideIn 0.4s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-planet-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-right: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); /* Enhanced shadow */
+            object-fit: cover;
+        }
+
+        .modal-title {
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .modal-body {
+            padding: 30px;
+            line-height: 1.8;
+        }
+
+        .info-section {
+            margin-bottom: 25px;
+        }
+        .info-section p { /* Style for description paragraph */
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+        }
+
+        .info-section h3 {
+            font-size: 1.4rem;
+            margin-bottom: 15px; /* Increased margin */
+            color: #4ecdc4;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(78, 205, 196, 0.3); /* Subtle underline */
+            padding-bottom: 5px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .info-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-3px);
+        }
+
+
+        .info-label {
+            font-weight: 600;
+            color: #ff6b6b;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: block; /* Ensure it takes full width */
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            color: white;
+        }
+        
+        /* Styling for the new "Learn More" link */
+        #learnMoreContainer {
+            margin-top: 15px; /* Space above the link */
+        }
+
+        #learnMoreContainer a {
+            display: inline-block;
+            background-color: #4ecdc4;
+            color: #1a1a2e;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        #learnMoreContainer a:hover {
+            background-color: #ff6b6b;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            z-index: 10; /* Ensure close button is above header */
+        }
+
+        .close:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            .toggle-container {
+                position: static; /* Stack toggle on smaller screens */
+                margin-bottom: 20px;
+                justify-content: center;
+            }
+            .solar-system {
+                padding: 40px 10px;
+                gap: 20px;
+            }
+            .planet {
+                min-width: calc(50% - 10px); /* Two planets per row */
+                padding: 15px;
+            }
+            .planet-image {
+                width: 80px; /* Smaller images */
+                height: 80px;
+            }
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+                /* max-height: 85vh; */
+            }
+            .modal-header {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
+            }
+            .modal-planet-image {
+                margin-right: 0;
+                margin-bottom: 15px;
+                width: 80px;
+                height: 80px;
+            }
+            .modal-title {
+                font-size: 2rem;
+            }
+            .modal-body {
+                padding: 20px;
+            }
+            .info-grid {
+                grid-template-columns: 1fr; /* Single column for info items */
+            }
+            .solar-system-animation {
+                height: 60vh; /* Adjust animation height for mobile */
+            }
+            /* Scale down orbits and planets for mobile in animation view */
+            .sun { width: 50px; height: 50px; }
+            .orbit-mercury { width: 100px; height: 100px; }
+            .orbit-venus { width: 130px; height: 130px; }
+            .orbit-earth { width: 160px; height: 160px; }
+            .orbit-mars { width: 200px; height: 200px; }
+            .orbit-jupiter { width: 260px; height: 260px; }
+            .orbit-saturn { width: 310px; height: 310px; }
+            .orbit-uranus { width: 360px; height: 360px; }
+            .orbit-neptune { width: 410px; height: 410px; }
+
+            .animated-planet { /* Adjust initial positioning for smaller orbits */
+                 /* Recalculate based on new orbit sizes if necessary, or use percentage-based positioning */
+            }
+            .planet-mercury { width: 8px; height: 8px; }
+            .planet-venus { width: 10px; height: 10px; }
+            .planet-earth { width: 12px; height: 12px; }
+            .planet-mars { width: 9px; height: 9px; }
+            .planet-jupiter { width: 25px; height: 25px; }
+            .planet-saturn { width: 22px; height: 22px; }
+            .planet-saturn::after { width: 150%; height: 50%; border-width: 1px; }
+            .planet-uranus { width: 18px; height: 18px; }
+            .planet-neptune { width: 16px; height: 16px; }
+        }
+         @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+             .planet {
+                min-width: calc(100% - 20px); /* Single planet per row */
+            }
+            .solar-system-animation {
+                height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="toggle-container">
+            <span class="toggle-label">Info View</span>
+            <div class="toggle-switch" id="viewToggle" onclick="toggleView()">
+                <div class="toggle-slider"></div>
+            </div>
+            <span class="toggle-label">Animation</span>
+        </div>
+        <h1>SOLAR SYSTEM EXPLORER</h1>
+        <p>Discover the mysteries of our celestial neighbors</p>
+    </div>
+
+    <div id="infoView" class="view-section">
+        <div class="solar-system">
+            <div class="planet" onclick="openModal('mercury')">
+                <img src="https://placehold.co/120x120/2a2a3e/ffffff?text=Mercury" alt="Mercury" class="planet-image" onerror="this.src='https://placehold.co/120x120/2a2a3e/ffffff?text=Error';">
+                <div class="planet-name">MERCURY</div>
+            </div>
+            <div class="planet" onclick="openModal('venus')">
+                <img src="https://placehold.co/120x120/2a2a3e/ffffff?text=Venus" alt="Venus" class="planet-image" onerror="this.src='https://placehold.co/120x120/2a2a3e/ffffff?text=Error';">
+                <div class="planet-name">VENUS</div>
+            </div>
+             <div class="planet" onclick="openModal('earth')">
+                <img src="https://placehold.co/120x120/2a2a3e/ffffff?text=Earth" alt="Earth" class="planet-image" onerror="this.src='https://placehold.co/120x120/2a2a3e/ffffff?text=Error';">
+                <div class="planet-name">EARTH</div>
+            </div>
+            <div class="planet" onclick="openModal('mars')">
+                <img src="https://placehold.co/120x120/2a2a3e/ffffff?text=Mars" alt="Mars" class="planet-image" onerror="this.src='https://placehold.co/120x120/2a2a3e/ffffff?text=Error';">
+                <div class="planet-name">MARS</div>
+            </div>
+            <div class="planet" onclick="openModal('jupiter')">
+                <img src="https://placehold.co/120x120/2a2a3e/ffffff?text=Jupiter" alt="Jupiter" class="planet-image" onerror="this.src='https://placehold.co/120x120/2a2a3e/ffffff?text=Error';">
+                <div class="planet-name">JUPITER</div>
+            </div>
+            <div class="planet" onclick="openModal('saturn')">
+                <img src="https://placehold.co/120x120/2a2a3e/ffffff?text=Saturn" alt="Saturn" class="planet-image" onerror="this.src='https://placehold.co/120x120/2a2a3e/ffffff?text=Error';">
+                <div class="planet-name">SATURN</div>
+            </div>
+            <div class="planet" onclick="openModal('uranus')">
+                <img src="https://placehold.co/120x120/2a2a3e/ffffff?text=Uranus" alt="Uranus" class="planet-image" onerror="this.src='https://placehold.co/120x120/2a2a3e/ffffff?text=Error';">
+                <div class="planet-name">URANUS</div>
+            </div>
+            <div class="planet" onclick="openModal('neptune')">
+                <img src="https://placehold.co/120x120/2a2a3e/ffffff?text=Neptune" alt="Neptune" class="planet-image" onerror="this.src='https://placehold.co/120x120/2a2a3e/ffffff?text=Error';">
+                <div class="planet-name">NEPTUNE</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="animationView" class="view-section hidden">
+        <div class="solar-system-animation">
+            <div class="sun"></div>
+            
+            <div class="orbit orbit-mercury">
+                <div class="animated-planet planet-mercury" onclick="openModal('mercury')" title="Mercury"></div>
+            </div>
+            
+            <div class="orbit orbit-venus">
+                <div class="animated-planet planet-venus" onclick="openModal('venus')" title="Venus"></div>
+            </div>
+            
+            <div class="orbit orbit-earth">
+                <div class="animated-planet planet-earth" onclick="openModal('earth')" title="Earth"></div>
+            </div>
+            
+            <div class="orbit orbit-mars">
+                <div class="animated-planet planet-mars" onclick="openModal('mars')" title="Mars"></div>
+            </div>
+            
+            <div class="orbit orbit-jupiter">
+                <div class="animated-planet planet-jupiter" onclick="openModal('jupiter')" title="Jupiter"></div>
+            </div>
+            
+            <div class="orbit orbit-saturn">
+                <div class="animated-planet planet-saturn" onclick="openModal('saturn')" title="Saturn"></div>
+            </div>
+            
+            <div class="orbit orbit-uranus">
+                <div class="animated-planet planet-uranus" onclick="openModal('uranus')" title="Uranus"></div>
+            </div>
+            
+            <div class="orbit orbit-neptune">
+                <div class="animated-planet planet-neptune" onclick="openModal('neptune')" title="Neptune"></div>
+            </div>
+        </div>
+        
+        <div class="animation-controls">
+            <div class="speed-control">
+                <span>Speed: </span>
+                <input type="range" min="0.1" max="3" step="0.1" value="1" class="speed-slider" id="speedSlider" oninput="adjustAnimationSpeed(this.value)">
+                <span id="speedValue">1x</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="planetModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div class="modal-header">
+                <img id="modalImage" src="https://placehold.co/100x100/1a1a2e/ffffff?text=Planet" alt="" class="modal-planet-image" onerror="this.src='https://placehold.co/100x100/1a1a2e/ffffff?text=Error';">
+                <h2 id="modalTitle" class="modal-title"></h2>
+            </div>
+            <div class="modal-body">
+                <div class="info-section">
+                    <h3>Physical Characteristics</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Diameter</div>
+                            <div class="info-value" id="diameter"></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Mass</div>
+                            <div class="info-value" id="mass"></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Surface Temperature</div>
+                            <div class="info-value" id="temperature"></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Gravity</div>
+                            <div class="info-value" id="gravity"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>Orbital Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Distance from Sun</div>
+                            <div class="info-value" id="distance"></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Orbital Period</div>
+                            <div class="info-value" id="orbital"></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Day Length</div>
+                            <div class="info-value" id="dayLength"></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Moons</div>
+                            <div class="info-value" id="moons"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h3>About This Planet</h3>
+                    <p id="description"></p>
+                    <div id="learnMoreContainer"></div> 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isAnimationView = false;
+        let planetData = {}; // Store planet data globally
+
+        // Toggle between views
+        function toggleView() {
+            const toggle = document.getElementById('viewToggle');
+            const infoView = document.getElementById('infoView');
+            const animationView = document.getElementById('animationView');
+            
+            isAnimationView = !isAnimationView;
+            
+            if (isAnimationView) {
+                toggle.classList.add('active');
+                infoView.classList.add('hidden');
+                animationView.classList.remove('hidden');
+            } else {
+                toggle.classList.remove('active');
+                infoView.classList.remove('hidden');
+                animationView.classList.add('hidden');
+            }
+        }
+
+        // Adjust animation speed
+        function adjustAnimationSpeed(speed) {
+            const orbits = document.querySelectorAll('.orbit');
+            document.getElementById('speedValue').textContent = speed + 'x';
+            
+            // Base durations in seconds - these should match the CSS
+            const baseDurations = {
+                'orbit-mercury': 10,
+                'orbit-venus': 15,
+                'orbit-earth': 20,
+                'orbit-mars': 30,
+                'orbit-jupiter': 45,
+                'orbit-saturn': 60,
+                'orbit-uranus': 75,
+                'orbit-neptune': 90
+            };
+            
+            orbits.forEach(orbit => {
+                let baseDuration = 20; // Default if class not found
+                for (const className in baseDurations) {
+                    if (orbit.classList.contains(className)) {
+                        baseDuration = baseDurations[className];
+                        break;
+                    }
+                }
+                const newDuration = baseDuration / parseFloat(speed);
+                orbit.style.animationDuration = newDuration + 's';
+            });
+        }
+        
+        // Function to create placeholder image URLs
+        function getPlaceholderImage(name, size = "120x120") {
+            return `https://placehold.co/${size}/2a2a3e/ffffff?text=${name}`;
+        }
+
+        // Load planet data from JSON file
+        async function loadPlanetData() {
+            try {
+                // Explicitly use ./ to denote a relative path from the current directory
+                const response = await fetch('./planets.json'); 
+                if (!response.ok) {
+                    // If the server returns an error (e.g., 404), throw an error to use fallback.
+                    // Added statusText for more details in case of an HTTP error.
+                    throw new Error(`HTTP error! status: ${response.status}, ${response.statusText}`);
+                }
+                planetData = await response.json();
+
+                // Update planet card images in Info View if using dynamic loading
+                const planetCards = document.querySelectorAll('#infoView .planet');
+                planetCards.forEach(card => {
+                    const planetKey = card.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    if (planetData[planetKey] && planetData[planetKey].image) {
+                        const imgElement = card.querySelector('.planet-image');
+                        imgElement.src = planetData[planetKey].image;
+                        imgElement.alt = planetData[planetKey].name;
+                    } else if (planetData[planetKey]) {
+                         const imgElement = card.querySelector('.planet-image');
+                         imgElement.src = getPlaceholderImage(planetData[planetKey].name);
+                         imgElement.alt = planetData[planetKey].name;
+                    }
+                });
+
+            } catch (error) {
+                // Updated console error message to reflect the path change.
+                console.error('Error loading planet data from ./planets.json:', error);
+                // Fallback data in case JSON file is not available or fails to load
+                // Added 'learnMore' field to fallback data
+                planetData = {
+                    mercury: {
+                        name: "Mercury",
+                        image: getPlaceholderImage("Mercury"),
+                        diameter: "4,879 km",
+                        mass: "3.30 × 10²³ kg",
+                        temperature: "-173°C to 427°C",
+                        gravity: "3.7 m/s²",
+                        distance: "57.9 million km",
+                        orbital: "88 Earth days",
+                        dayLength: "59 Earth days",
+                        moons: "0",
+                        description: "Mercury is the smallest planet in our solar system and the closest to the Sun. It has a very thin atmosphere and experiences extreme temperature variations.",
+                        learnMore: "https://en.wikipedia.org/wiki/Mercury_(planet)"
+                    },
+                    venus: {
+                        name: "Venus",
+                        image: getPlaceholderImage("Venus"),
+                        diameter: "12,104 km",
+                        mass: "4.87 × 10²⁴ kg",
+                        temperature: "462°C (average)",
+                        gravity: "8.87 m/s²",
+                        distance: "108.2 million km",
+                        orbital: "225 Earth days",
+                        dayLength: "243 Earth days (retrograde)",
+                        moons: "0",
+                        description: "Venus is known for its thick, toxic atmosphere composed primarily of carbon dioxide, and its surface is obscured by clouds of sulfuric acid. It's the hottest planet in our solar system.",
+                        learnMore: "https://en.wikipedia.org/wiki/Venus"
+                    },
+                    earth: {
+                        name: "Earth",
+                        image: getPlaceholderImage("Earth"),
+                        diameter: "12,742 km",
+                        mass: "5.97 × 10²⁴ kg",
+                        temperature: "15°C (average)",
+                        gravity: "9.81 m/s²",
+                        distance: "149.6 million km",
+                        orbital: "365.25 Earth days",
+                        dayLength: "24 hours",
+                        moons: "1 (The Moon)",
+                        description: "Our home planet, Earth is the only known celestial body to support life. It has a diverse climate, vast oceans, and a protective atmosphere.",
+                        learnMore: "https://en.wikipedia.org/wiki/Earth"
+                    },
+                     mars: {
+                        name: "Mars",
+                        image: getPlaceholderImage("Mars"),
+                        diameter: "6,779 km",
+                        mass: "6.42 × 10²³ kg",
+                        temperature: "-63°C (average)",
+                        gravity: "3.71 m/s²",
+                        distance: "227.9 million km",
+                        orbital: "687 Earth days",
+                        dayLength: "24.6 hours",
+                        moons: "2 (Phobos, Deimos)",
+                        description: "Mars, often called the Red Planet, has a thin atmosphere and features such as polar ice caps, canyons, and extinct volcanoes. It is a primary target for future human exploration.",
+                        learnMore: "https://en.wikipedia.org/wiki/Mars"
+                    },
+                    jupiter: {
+                        name: "Jupiter",
+                        image: getPlaceholderImage("Jupiter"),
+                        diameter: "139,820 km",
+                        mass: "1.90 × 10²⁷ kg",
+                        temperature: "-145°C (cloud tops)",
+                        gravity: "24.79 m/s²",
+                        distance: "778.5 million km",
+                        orbital: "11.86 Earth years",
+                        dayLength: "9.9 hours",
+                        moons: "95 (known, e.g., Io, Europa, Ganymede, Callisto)",
+                        description: "Jupiter is the largest planet in our solar system, a gas giant known for its Great Red Spot, a massive storm. It has a strong magnetic field and numerous moons.",
+                        learnMore: "https://en.wikipedia.org/wiki/Jupiter"
+                    },
+                    saturn: {
+                        name: "Saturn",
+                        image: getPlaceholderImage("Saturn"),
+                        diameter: "116,460 km (without rings)",
+                        mass: "5.68 × 10²⁶ kg",
+                        temperature: "-178°C (cloud tops)",
+                        gravity: "10.44 m/s²",
+                        distance: "1.43 billion km",
+                        orbital: "29.45 Earth years",
+                        dayLength: "10.7 hours",
+                        moons: "146 (known, e.g., Titan, Enceladus)",
+                        description: "Saturn is famous for its spectacular ring system, composed mostly of ice particles. It is another gas giant with a composition similar to Jupiter.",
+                        learnMore: "https://en.wikipedia.org/wiki/Saturn"
+                    },
+                    uranus: {
+                        name: "Uranus",
+                        image: getPlaceholderImage("Uranus"),
+                        diameter: "50,724 km",
+                        mass: "8.68 × 10²⁵ kg",
+                        temperature: "-214°C (cloud tops)",
+                        gravity: "8.69 m/s²",
+                        distance: "2.87 billion km",
+                        orbital: "84 Earth years",
+                        dayLength: "17.2 hours (retrograde)",
+                        moons: "27 (known, e.g., Titania, Oberon)",
+                        description: "Uranus is an ice giant with a unique feature: it rotates on its side, possibly due to a massive collision early in its history. It has a faint ring system.",
+                        learnMore: "https://en.wikipedia.org/wiki/Uranus"
+                    },
+                    neptune: {
+                        name: "Neptune",
+                        image: getPlaceholderImage("Neptune"),
+                        diameter: "49,244 km",
+                        mass: "1.02 × 10²⁶ kg",
+                        temperature: "-218°C (cloud tops)",
+                        gravity: "11.15 m/s²",
+                        distance: "4.50 billion km",
+                        orbital: "164.8 Earth years",
+                        dayLength: "16.1 hours",
+                        moons: "14 (known, e.g., Triton)",
+                        description: "Neptune is the farthest known planet from the Sun (since Pluto's reclassification). It is an ice giant with strong winds and a dynamic atmosphere, including a Great Dark Spot.",
+                        learnMore: "https://en.wikipedia.org/wiki/Neptune"
+                    }
+                };
+                 // Update planet card images with fallback if JSON load failed
+                const planetCards = document.querySelectorAll('#infoView .planet');
+                planetCards.forEach(card => {
+                    const planetKey = card.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    if (planetData[planetKey] && planetData[planetKey].image) {
+                        const imgElement = card.querySelector('.planet-image');
+                        imgElement.src = planetData[planetKey].image; // This will be the placeholder from fallback
+                        imgElement.alt = planetData[planetKey].name;
+                    }
+                });
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadPlanetData(); // Load data when the page is ready
+            // Initial call to set animation speed correctly if slider is not 1x by default
+            const initialSpeed = document.getElementById('speedSlider').value;
+            adjustAnimationSpeed(initialSpeed); 
+        });
+
+        function openModal(planetName) {
+            // First, check if planetData is populated. If not, try loading it again.
+            // This is a safeguard, ideally loadPlanetData completes before any openModal call.
+            if (Object.keys(planetData).length === 0) {
+                console.warn("Planet data not loaded yet. Attempting to load now.");
+                loadPlanetData().then(() => displayModalData(planetName));
+            } else {
+                displayModalData(planetName);
+            }
+        }
+
+        function displayModalData(planetName) {
+            const planet = planetData[planetName];
+            if (!planet) {
+                console.error("Planet data not found for:", planetName);
+                // Display a generic error in the modal or simply don't open it
+                document.getElementById('modalTitle').textContent = "Error";
+                document.getElementById('description').textContent = "Planet information could not be loaded.";
+                // Clear other fields
+                document.getElementById('modalImage').src = getPlaceholderImage("Error", "100x100");
+                document.getElementById('diameter').textContent = 'N/A';
+                // ... clear other fields similarly
+                document.getElementById('planetModal').style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                return;
+            }
+
+            const modal = document.getElementById('planetModal');
+            
+            document.getElementById('modalTitle').textContent = planet.name || "Unknown Planet";
+            document.getElementById('modalImage').src = planet.image || getPlaceholderImage(planet.name || "Planet", "100x100");
+            document.getElementById('modalImage').alt = planet.name || "Planet";
+            
+            document.getElementById('diameter').textContent = planet.diameter || 'N/A';
+            document.getElementById('mass').textContent = planet.mass || 'N/A';
+            document.getElementById('temperature').textContent = planet.temperature || 'N/A';
+            document.getElementById('gravity').textContent = planet.gravity || 'N/A';
+            document.getElementById('distance').textContent = planet.distance || 'N/A';
+            document.getElementById('orbital').textContent = planet.orbital || 'N/A';
+            document.getElementById('dayLength').textContent = planet.dayLength || 'N/A';
+            document.getElementById('moons').textContent = planet.moons || 'N/A';
+            document.getElementById('description').textContent = planet.description || 'No description available.';
+
+            // Handle the "Learn More" link
+            const learnMoreContainer = document.getElementById('learnMoreContainer');
+            learnMoreContainer.innerHTML = ''; // Clear previous link
+
+            if (planet.learnMore) {
+                const linkElement = document.createElement('a');
+                linkElement.href = planet.learnMore;
+                linkElement.textContent = `Learn more about ${planet.name}`;
+                linkElement.target = '_blank'; // Open in a new tab
+                linkElement.rel = 'noopener noreferrer'; // Security best practice
+                learnMoreContainer.appendChild(linkElement);
+            }
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling when modal is open
+        }
+
+
+        function closeModal() {
+            const modal = document.getElementById('planetModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore background scrolling
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('planetModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' || event.key === 'Esc') { // Added 'Esc' for broader compatibility
+                if (document.getElementById('planetModal').style.display === 'block') {
+                    closeModal();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
